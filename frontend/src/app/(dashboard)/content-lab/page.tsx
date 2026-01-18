@@ -232,80 +232,79 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                 <CardContent className="pt-6">
                     <div className="space-y-4">
                         {/* Feed Selector */}
-                        <div className="flex gap-4">
-                            <div className="flex-1">
-                                <Label htmlFor="feed-select" className="text-sm font-medium mb-2 block">
-                                    Select RSS Feed Source
+                        <div className="space-y-2">
+                            <Label htmlFor="feed-select" className="text-sm font-medium">
+                                Select RSS Feed Source
+                            </Label>
+                            <Select value={selectedFeed} onValueChange={(value) => {
+                                setSelectedFeed(value)
+                                setSelectedArticle(null)
+                                setSourceContent('')
+                                setGeneratedContent('')
+                            }}>
+                                <SelectTrigger className="w-full">
+                                    <div className="flex items-center gap-2">
+                                        <Rss className="h-4 w-4 text-muted-foreground shrink-0" />
+                                        <SelectValue placeholder="Choose a feed source..." />
+                                    </div>
+                                </SelectTrigger>
+                                <SelectContent
+                                    position="popper"
+                                    side="bottom"
+                                    sideOffset={4}
+                                    className="w-[var(--radix-select-trigger-width)]"
+                                >
+                                    {mockRssFeeds.map((feed) => (
+                                        <SelectItem key={feed.id} value={feed.id}>
+                                            <div className="flex flex-col items-start">
+                                                <span className="font-medium">{feed.name}</span>
+                                                <span className="text-xs text-muted-foreground">{feed.url}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Articles Selector */}
+                        {selectedFeed && (
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">
+                                    Select Article from {mockRssFeeds.find(f => f.id === selectedFeed)?.name}
                                 </Label>
-                                <Select value={selectedFeed} onValueChange={(value) => {
-                                    setSelectedFeed(value)
-                                    setSelectedArticle(null)
-                                    setSourceContent('')
-                                    setGeneratedContent('')
-                                }}>
+                                <Select
+                                    value={selectedArticle?.id || ''}
+                                    onValueChange={(value) => {
+                                        const article = feedArticles.find(a => a.id === value)
+                                        if (article) handleSelectArticle(article)
+                                    }}
+                                >
                                     <SelectTrigger className="w-full">
                                         <div className="flex items-center gap-2">
-                                            <Rss className="h-4 w-4 text-muted-foreground" />
-                                            <SelectValue placeholder="Choose a feed source..." />
+                                            <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                                            <SelectValue placeholder="Choose an article to transform..." />
                                         </div>
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        {mockRssFeeds.map((feed) => (
-                                            <SelectItem key={feed.id} value={feed.id}>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-medium">{feed.name}</span>
-                                                    <span className="text-xs text-muted-foreground">({feed.url})</span>
+                                    <SelectContent
+                                        position="popper"
+                                        side="bottom"
+                                        sideOffset={4}
+                                        className="w-[var(--radix-select-trigger-width)] max-h-[300px]"
+                                    >
+                                        {feedArticles.map((article) => (
+                                            <SelectItem key={article.id} value={article.id}>
+                                                <div className="flex flex-col items-start py-1">
+                                                    <span className="font-medium line-clamp-1">{article.title}</span>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {formatDistanceToNow(article.publishedAt, { addSuffix: true })}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                            </div>
-                        </div>
-
-                        {/* Articles List */}
-                        {selectedFeed && (
-                            <div className="space-y-2">
-                                <Label className="text-sm font-medium">
-                                    Latest Articles from {mockRssFeeds.find(f => f.id === selectedFeed)?.name}
-                                </Label>
-                                <div className="border rounded-lg divide-y max-h-[300px] overflow-auto">
-                                    {feedArticles.map((article) => (
-                                        <div
-                                            key={article.id}
-                                            onClick={() => handleSelectArticle(article)}
-                                            className={`p-3 cursor-pointer transition-colors hover:bg-accent ${selectedArticle?.id === article.id ? 'bg-accent border-l-4 border-l-violet-600' : ''
-                                                }`}
-                                        >
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-medium text-sm truncate">{article.title}</p>
-                                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                                                        {article.excerpt}
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-2 shrink-0">
-                                                    <Badge variant="outline" className="text-xs">
-                                                        {formatDistanceToNow(article.publishedAt, { addSuffix: true })}
-                                                    </Badge>
-                                                    <a
-                                                        href={article.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        className="text-muted-foreground hover:text-foreground"
-                                                    >
-                                                        <ExternalLink className="h-4 w-4" />
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    <FileText className="h-3 w-3 inline mr-1" />
-                                    Click on an article to load its content
-                                </p>
                             </div>
                         )}
                     </div>
@@ -406,7 +405,7 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent position="popper" side="bottom" sideOffset={4}>
                                     <SelectItem value="professional">Professional</SelectItem>
                                     <SelectItem value="casual">Casual</SelectItem>
                                     <SelectItem value="academic">Academic</SelectItem>
@@ -523,7 +522,7 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select destination site" />
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent position="popper" side="bottom" sideOffset={4}>
                                                 <SelectItem value="myblog">myblog.com</SelectItem>
                                                 <SelectItem value="techsite">techsite.wordpress.com</SelectItem>
                                                 <SelectItem value="portfolio">portfolio.example.com</SelectItem>
@@ -563,7 +562,7 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                                             <SelectTrigger>
                                                 <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent position="popper" side="bottom" sideOffset={4}>
                                                 <SelectItem value="publish">Published</SelectItem>
                                                 <SelectItem value="draft">Draft</SelectItem>
                                                 <SelectItem value="private">Private</SelectItem>
