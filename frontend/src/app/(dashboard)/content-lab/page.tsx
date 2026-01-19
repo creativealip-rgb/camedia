@@ -42,7 +42,7 @@ import {
 } from 'lucide-react'
 
 
-import { WordPressSite, getSites } from '@/lib/sites-store'
+import { WordPressSite, getSites, getActiveSite } from '@/lib/sites-store'
 import { RssFeed, getFeeds, addFeed, removeFeed } from '@/lib/feeds-store'
 import { Plus, Trash2 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -60,6 +60,18 @@ export default function ContentLabPage() {
     // Scraper state
     const [scrapeUrl, setScrapeUrl] = useState('')
     const [isScraping, setIsScraping] = useState(false)
+
+    // AI Rewrite state
+    const [aiTone, setAiTone] = useState<'professional' | 'casual' | 'creative' | 'technical'>('professional')
+    const [aiStyle, setAiStyle] = useState<'blog' | 'news' | 'tutorial' | 'review'>('blog')
+    const [aiLength, setAiLength] = useState<'shorter' | 'same' | 'longer'>('same')
+    const [isRewriting, setIsRewriting] = useState(false)
+
+    // SEO & Image state
+    const [slug, setSlug] = useState('')
+    const [featuredImage, setFeaturedImage] = useState('')
+    const [isGeneratingImage, setIsGeneratingImage] = useState(false)
+
     const [tone, setTone] = useState('professional')
     const [generateImage, setGenerateImage] = useState(true)
     const [copied, setCopied] = useState(false)
@@ -72,8 +84,12 @@ export default function ContentLabPage() {
     const [isScheduleOpen, setIsScheduleOpen] = useState(false)
     const [scheduleDate, setScheduleDate] = useState('')
     const [scheduleTime, setScheduleTime] = useState('')
-    const [selectedSite, setSelectedSite] = useState('')
     const [postStatus, setPostStatus] = useState('draft')
+
+    // WordPress categories
+    const [wpCategories, setWpCategories] = useState<Array<{ id: number; name: string }>>([])
+    const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
+    const [isFetchingCategories, setIsFetchingCategories] = useState(false)
 
     // Sites state
     const [sites, setSites] = useState<WordPressSite[]>([])
@@ -89,15 +105,39 @@ export default function ContentLabPage() {
     useEffect(() => {
         setSites(getSites())
         setFeeds(getFeeds())
+
+        // Fetch WordPress categories from active site
+        const fetchCategories = async () => {
+            const activeSite = getActiveSite()
+            if (!activeSite) return
+
+            setIsFetchingCategories(true)
+            try {
+                const params = new URLSearchParams({
+                    wpUrl: activeSite.url,
+                    username: activeSite.username,
+                    appPassword: activeSite.appPassword
+                })
+                const response = await fetch(`/api/wordpress/categories?${params.toString()}`)
+                const data = await response.json()
+
+                if (data.success && data.categories) {
+                    setWpCategories(data.categories)
+                }
+            } catch (error) {
+                console.error('Failed to fetch categories:', error)
+            } finally {
+                setIsFetchingCategories(false)
+            }
+        }
+
+        fetchCategories()
     }, [])
 
 
-    // Derived credentials from selected site
+    // Derived credentials from active site
     const getSelectedSiteCredentials = () => {
-        // Use selected site or fallback to first available site
-        const siteId = selectedSite || sites[0]?.id
-        const site = sites.find(s => s.id === siteId)
-
+        const site = getActiveSite()
         if (!site) return null
 
         return {
@@ -177,20 +217,82 @@ export default function ContentLabPage() {
         }
     }, [selectedFeed])
 
-    const handleSelectArticle = (article: any) => {
+    const handleSelectArticle = async (article: any) => {
         setSelectedArticle(article)
         setIsScanning(true)
-        // Simulate scraping the selected article (or use full content if available)
-        setTimeout(() => {
+
+        try {
+            // Auto-scrape full article content from URL
+            const response = await fetch('/api/scraper', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: article.url })
+            })
+
+            const result = await response.json()
+
+            if (result.success && result.data) {
+                // Use scraped full content
+                setSourceContent(result.data.content || '')
+            } else {
+                // Fallback to RSS excerpt if scraping fails
+                setSourceContent(`# ${article.title}
+
+${article.excerpt || article.description || ''}
+
+Source: ${article.url}`)
+            }
+        } catch (error) {
+            console.error('Scraping error:', error)
+            // Fallback to RSS excerpt
             setSourceContent(`# ${article.title}
 
 ${article.excerpt || article.description || ''}
 
-Source: ${article.url}
-
-${article.content || ''}`)
+Source: ${article.url}`)
+        } finally {
             setIsScanning(false)
-        }, 1000)
+        }
+    }
+
+    const handleAIRewrite = async () => {
+        if (!sourceContent.trim()) {
+            alert('Please select an article first')
+            return
+        }
+
+        setIsRewriting(true)
+        setGeneratedContent('')
+        setGeneratedTitle('')
+
+        try {
+            const response = await fetch('/api/ai/rewrite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    content: sourceContent,
+                    title: selectedArticle?.title,
+                    tone: aiTone,
+                    style: aiStyle,
+                    targetLength: aiLength,
+                    includeMetadata: true,
+                }),
+            })
+
+            const result = await response.json()
+
+            if (result.success && result.data) {
+                setGeneratedContent(result.data.content)
+                setGeneratedTitle(result.data.title)
+            } else {
+                alert(`AI Rewrite failed: ${result.error || 'Unknown error'}`)
+            }
+        } catch (error: any) {
+            console.error('AI Rewrite error:', error)
+            alert(`Failed to rewrite: ${error.message}`)
+        } finally {
+            setIsRewriting(false)
+        }
     }
 
     const handleGenerate = async () => {
@@ -303,6 +405,7 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                     title: generatedTitle,
                     content: generatedContent,
                     status,
+                    categories: selectedCategory ? [selectedCategory] : undefined,
                 }),
             })
 
@@ -358,6 +461,7 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                     content: generatedContent,
                     status: 'future',
                     date: scheduledDateTime.toISOString(),
+                    categories: selectedCategory ? [selectedCategory] : undefined,
                 }),
             })
 
@@ -406,138 +510,184 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                         Choose Source
                     </CardTitle>
                     <CardDescription>
-                        Select content to transform from RSS feeds or direct URL
+                        Select content to transform from RSS feeds
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Tabs defaultValue="rss" className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 mb-4">
-                            <TabsTrigger value="rss" className="flex items-center gap-2">
-                                <Rss className="h-4 w-4" />
-                                RSS Feed
-                            </TabsTrigger>
-                            <TabsTrigger value="url" className="flex items-center gap-2">
-                                <Globe className="h-4 w-4" />
-                                Direct URL
-                            </TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="rss" className="space-y-4">
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label>Select RSS Feed Source</Label>
-                                        <Dialog open={isAddFeedOpen} onOpenChange={setIsAddFeedOpen}>
-                                            <DialogTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="text-violet-600 h-6 px-2 hover:bg-violet-50">
-                                                    <Plus className="h-4 w-4 mr-1" /> Add Feed
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <DialogHeader>
-                                                    <DialogTitle>Add New RSS Feed</DialogTitle>
-                                                    <DialogDescription>
-                                                        Enter the URL of the RSS feed you want to follow.
-                                                    </DialogDescription>
-                                                </DialogHeader>
-                                                <div className="space-y-4 py-4">
-                                                    <div className="space-y-2">
-                                                        <Label>Feed Name</Label>
-                                                        <Input
-                                                            placeholder="e.g. TechCrunch"
-                                                            value={newFeedName}
-                                                            onChange={(e) => setNewFeedName(e.target.value)}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label>Feed URL</Label>
-                                                        <Input
-                                                            placeholder="https://example.com/feed"
-                                                            value={newFeedUrl}
-                                                            onChange={(e) => setNewFeedUrl(e.target.value)}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <DialogFooter>
-                                                    <Button variant="outline" onClick={() => setIsAddFeedOpen(false)}>Cancel</Button>
-                                                    <Button onClick={handleAddFeed} disabled={!newFeedName || !newFeedUrl}>Add Feed</Button>
-                                                </DialogFooter>
-                                            </DialogContent>
-                                        </Dialog>
-                                    </div>
-                                    <Select value={selectedFeed || ''} onValueChange={(val) => {
-                                        setSelectedFeed(val)
-                                        setSelectedArticle(null)
-                                        setSourceContent('')
-                                    }}>
-                                        <SelectTrigger className="border-violet-200 focus:ring-violet-500">
-                                            <SelectValue placeholder="Select a feed..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {feeds.map((feed) => (
-                                                <SelectItem key={feed.id} value={feed.id}>
-                                                    <div className="flex flex-col items-start text-left">
-                                                        <span className="font-medium">{feed.name}</span>
-                                                        <span className="text-xs text-muted-foreground truncate max-w-[200px]">{feed.url}</span>
-                                                    </div>
-                                                </SelectItem>
-                                            ))}
-                                            {feeds.length === 0 && (
-                                                <div className="p-2 text-center text-sm text-muted-foreground">No feeds added</div>
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Select Article</Label>
-                                    <Select value={selectedArticle?.id || ''} onValueChange={(val) => {
-                                        const article = articles.find(a => a.id === val)
-                                        if (article) handleSelectArticle(article)
-                                    }}>
-                                        <SelectTrigger disabled={!selectedFeed || isFetchingRSS}>
-                                            <SelectValue placeholder={isFetchingRSS ? "Fetching..." : "Choose an article..."} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {articles.map((article) => (
-                                                <SelectItem key={article.id} value={article.id}>
-                                                    <span className="truncate block max-w-[400px]">{article.title}</span>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <Label>Select RSS Feed Source</Label>
+                                <Dialog open={isAddFeedOpen} onOpenChange={setIsAddFeedOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="text-violet-600 h-6 px-2 hover:bg-violet-50">
+                                            <Plus className="h-4 w-4 mr-1" /> Add Feed
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                        <DialogHeader>
+                                            <DialogTitle>Add New RSS Feed</DialogTitle>
+                                            <DialogDescription>
+                                                Enter the URL of the RSS feed you want to follow.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="space-y-4 py-4">
+                                            <div className="space-y-2">
+                                                <Label>Feed Name</Label>
+                                                <Input
+                                                    placeholder="e.g. TechCrunch"
+                                                    value={newFeedName}
+                                                    onChange={(e) => setNewFeedName(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label>Feed URL</Label>
+                                                <Input
+                                                    placeholder="https://example.com/feed"
+                                                    value={newFeedUrl}
+                                                    onChange={(e) => setNewFeedUrl(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                        <DialogFooter>
+                                            <Button variant="outline" onClick={() => setIsAddFeedOpen(false)}>Cancel</Button>
+                                            <Button onClick={handleAddFeed} disabled={!newFeedName || !newFeedUrl}>Add Feed</Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
-                        </TabsContent>
+                            <Select value={selectedFeed || ''} onValueChange={(val) => {
+                                setSelectedFeed(val)
+                                setSelectedArticle(null)
+                                setSourceContent('')
+                            }}>
+                                <SelectTrigger className="border-violet-200 focus:ring-violet-500">
+                                    <SelectValue placeholder="Select a feed..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {feeds.map((feed) => (
+                                        <SelectItem key={feed.id} value={feed.id}>
+                                            <div className="flex flex-col items-start text-left">
+                                                <span className="font-medium">{feed.name}</span>
+                                                <span className="text-xs text-muted-foreground truncate max-w-[200px]">{feed.url}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                    {feeds.length === 0 && (
+                                        <div className="p-2 text-center text-sm text-muted-foreground">No feeds added</div>
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                        <TabsContent value="url" className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>Enter Article URL</Label>
-                                <div className="flex gap-2">
-                                    <Input
-                                        placeholder="https://example.com/some-article"
-                                        value={scrapeUrl}
-                                        onChange={(e) => setScrapeUrl(e.target.value)}
-                                        className="border-violet-200"
-                                    />
-                                    <Button
-                                        onClick={handleScrape}
-                                        disabled={!scrapeUrl || isScraping}
-                                        className="bg-violet-600 hover:bg-violet-700"
-                                    >
-                                        {isScraping ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : (
-                                            'Fetch'
-                                        )}
-                                    </Button>
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                    We'll extract the title and content automatically.
-                                </p>
-                            </div>
-                        </TabsContent>
-                    </Tabs>
+                        <div className="space-y-2">
+                            <Label>Select Article</Label>
+                            <Select value={selectedArticle?.id || ''} onValueChange={(val) => {
+                                const article = articles.find(a => a.id === val)
+                                if (article) handleSelectArticle(article)
+                            }}>
+                                <SelectTrigger disabled={!selectedFeed || isFetchingRSS}>
+                                    <SelectValue placeholder={isFetchingRSS ? "Fetching..." : "Choose an article..."} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {articles.map((article) => (
+                                        <SelectItem key={article.id} value={article.id}>
+                                            <span className="truncate block max-w-[400px]">{article.title}</span>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* AI Configuration */}
+            <Card className="border-violet-100 dark:border-violet-900 shadow-sm">
+                <CardHeader>
+                    <CardTitle className="text-xl flex items-center gap-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400">
+                            2
+                        </span>
+                        AI Configuration
+                    </CardTitle>
+                    <CardDescription>
+                        Configure how AI will rewrite your content
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {/* First Row */}
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Tone</Label>
+                            <Select value={aiTone} onValueChange={(v: any) => setAiTone(v)}>
+                                <SelectTrigger className="h-10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="professional">Professional</SelectItem>
+                                    <SelectItem value="casual">Casual</SelectItem>
+                                    <SelectItem value="creative">Creative</SelectItem>
+                                    <SelectItem value="technical">Technical</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">Writing tone and personality</p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Style</Label>
+                            <Select value={aiStyle} onValueChange={(v: any) => setAiStyle(v)}>
+                                <SelectTrigger className="h-10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="blog">Blog Post</SelectItem>
+                                    <SelectItem value="news">News Article</SelectItem>
+                                    <SelectItem value="tutorial">Tutorial/Guide</SelectItem>
+                                    <SelectItem value="review">Review</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">Article format and structure</p>
+                        </div>
+                    </div>
+
+                    {/* Second Row */}
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Length</Label>
+                            <Select value={aiLength} onValueChange={(v: any) => setAiLength(v)}>
+                                <SelectTrigger className="h-10">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="shorter">Shorter (70%)</SelectItem>
+                                    <SelectItem value="same">Same Length</SelectItem>
+                                    <SelectItem value="longer">Longer (130%)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">Target article length</p>
+                        </div>
+
+                        <div className="flex items-end">
+                            <Button
+                                className="w-full h-10 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
+                                onClick={handleAIRewrite}
+                                disabled={!sourceContent || isRewriting}
+                            >
+                                {isRewriting ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Rewriting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="h-4 w-4 mr-2" />
+                                        Rewrite with AI
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -619,51 +769,7 @@ Ready to transform your workflow? Start implementing these strategies today.`)
             </div>
 
             {/* Configuration & Actions */}
-            <div className="grid gap-6 lg:grid-cols-3">
-                {/* Settings */}
-                <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <Settings2 className="h-5 w-5" />
-                            Generation Settings
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Tone</Label>
-                            <Select value={tone} onValueChange={setTone}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="professional">Professional</SelectItem>
-                                    <SelectItem value="casual">Casual</SelectItem>
-                                    <SelectItem value="academic">Academic</SelectItem>
-                                    <SelectItem value="conversational">Conversational</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Keywords</Label>
-                            <Input placeholder="SEO, content, automation" />
-                        </div>
-                        <Separator />
-                        <div className="flex items-center justify-between">
-                            <div className="space-y-0.5">
-                                <Label>Generate AI Image</Label>
-                                <p className="text-xs text-muted-foreground">Uses 2 tokens</p>
-                            </div>
-                            <Button
-                                variant={generateImage ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => setGenerateImage(!generateImage)}
-                            >
-                                <ImageIcon className="h-4 w-4 mr-1" />
-                                {generateImage ? 'On' : 'Off'}
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+            <div className="grid gap-6 lg:grid-cols-2">
 
                 {/* SEO Preview */}
                 <Card>
@@ -673,9 +779,21 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label>Meta Title</Label>
-                            <Input defaultValue={generatedTitle || "Article Title"} />
-                            <p className="text-xs text-muted-foreground">Characters: {(generatedTitle || "Article Title").length}</p>
+                            <Input value={generatedTitle || ""} onChange={(e) => setGeneratedTitle(e.target.value)} placeholder="Article Title" />
+                            <p className="text-xs text-muted-foreground">Characters: {(generatedTitle || "").length}/60</p>
                         </div>
+
+                        <div className="space-y-2">
+                            <Label>Slug (URL)</Label>
+                            <Input
+                                value={slug}
+                                onChange={(e) => setSlug(e.target.value)}
+                                placeholder="article-slug-url"
+                                className="font-mono text-sm"
+                            />
+                            <p className="text-xs text-muted-foreground">URL-friendly version of title</p>
+                        </div>
+
                         <div className="space-y-2">
                             <Label>Meta Description</Label>
                             <Textarea
@@ -683,6 +801,48 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                                 className="resize-none"
                                 rows={3}
                             />
+                            <p className="text-xs text-muted-foreground">Ideal: 150-160 characters</p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Featured Image</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) {
+                                            setFeaturedImage(URL.createObjectURL(file))
+                                        }
+                                    }}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setIsGeneratingImage(true)}
+                                    disabled={isGeneratingImage}
+                                    className="shrink-0"
+                                >
+                                    {isGeneratingImage ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="h-4 w-4 mr-2" />
+                                            AI Generate
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                            {featuredImage && (
+                                <div className="mt-2 rounded-lg border overflow-hidden">
+                                    <img src={featuredImage} alt="Featured" className="w-full h-32 object-cover" />
+                                </div>
+                            )}
+                            <p className="text-xs text-muted-foreground">Upload from local or generate with AI - Recommended: 1200x630px</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -693,40 +853,26 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                         <CardTitle className="text-lg">Actions</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <Button
-                            className="w-full bg-gradient-to-r from-violet-600 to-indigo-600"
-                            onClick={handleGenerate}
-                            disabled={!sourceContent || isGenerating}
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Generating...
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles className="h-4 w-4 mr-2" />
-                                    Generate Content (1 Token)
-                                </>
-                            )}
-                        </Button>
 
                         <div className="space-y-2">
-                            <Label>Publish Destination</Label>
-                            <Select value={selectedSite} onValueChange={setSelectedSite}>
+                            <Label>Category</Label>
+                            <Select
+                                value={selectedCategory?.toString() || ''}
+                                onValueChange={(val) => setSelectedCategory(parseInt(val))}
+                                disabled={isFetchingCategories || wpCategories.length === 0}
+                            >
                                 <SelectTrigger>
-                                    <SelectValue placeholder={sites.length > 0 ? "Select site" : "No sites"} />
+                                    <SelectValue placeholder={isFetchingCategories ? "Loading categories..." : wpCategories.length > 0 ? "Select category" : "No categories found"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {sites.length > 0 ? (
-                                        sites.map(site => (
-                                            <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
-                                        ))
-                                    ) : (
-                                        <div className="p-2 text-center text-sm text-muted-foreground">No sites</div>
-                                    )}
+                                    {wpCategories.map(category => (
+                                        <SelectItem key={category.id} value={category.id.toString()}>
+                                            {category.name}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
+                            <p className="text-xs text-muted-foreground">Post will be published to selected category</p>
                         </div>
 
                         {publishResult && (
@@ -785,31 +931,6 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                                     </DialogDescription>
                                 </DialogHeader>
                                 <div className="space-y-4 py-4">
-                                    <div className="space-y-2">
-                                        <Label>WordPress Site</Label>
-                                        <Select value={selectedSite} onValueChange={setSelectedSite}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder={sites.length > 0 ? "Select destination site" : "No sites connected"} />
-                                            </SelectTrigger>
-                                            <SelectContent position="popper" side="bottom" sideOffset={4}>
-                                                {sites.length > 0 ? (
-                                                    sites.map(site => (
-                                                        <SelectItem key={site.id} value={site.id}>{site.name}</SelectItem>
-                                                    ))
-                                                ) : (
-                                                    <div className="p-2 text-center text-sm text-muted-foreground">
-                                                        <p className="mb-2">No connected sites</p>
-                                                        <a href="/integrations" className="text-violet-600 hover:underline block">Go to Integrations</a>
-                                                    </div>
-                                                )}
-                                            </SelectContent>
-                                        </Select>
-                                        {sites.length === 0 && (
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                You need to connect a site in the <a href="/integrations" className="underline hover:text-foreground">Integrations page</a> first.
-                                            </p>
-                                        )}
-                                    </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label>Date</Label>
@@ -858,7 +979,7 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                                     <Button
                                         className="bg-gradient-to-r from-violet-600 to-indigo-600"
                                         onClick={handleSchedulePublish}
-                                        disabled={!selectedSite || !scheduleDate || !scheduleTime || isPublishing}
+                                        disabled={!scheduleDate || !scheduleTime || isPublishing}
                                     >
                                         <Calendar className="h-4 w-4 mr-2" />
                                         Schedule
@@ -875,6 +996,6 @@ Ready to transform your workflow? Start implementing these strategies today.`)
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </div >
     )
 }
