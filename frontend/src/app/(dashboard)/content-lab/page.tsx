@@ -231,10 +231,19 @@ export default function ContentLabPage() {
 
             const result = await response.json()
 
+            console.log('Scraper API Response:', {
+                success: result.success,
+                contentLength: result.data?.content?.length || 0,
+                hasContent: !!result.data?.content,
+                source: result.data?.source,
+                tier: result.data?.extractionTier
+            })
+
             if (result.success && result.data) {
                 // Use scraped full content
                 setSourceContent(result.data.content || '')
             } else {
+                console.warn('Scraping failed, using RSS fallback')
                 // Fallback to RSS excerpt if scraping fails
                 setSourceContent(`# ${article.title}
 

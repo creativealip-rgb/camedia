@@ -31,12 +31,25 @@ export async function POST(request: Request) {
             body: JSON.stringify({ url }),
         })
 
+        console.log('Backend scraper response:', {
+            status: response.status,
+            ok: response.ok,
+            url: `${backendUrl}/api/scraper/scrape`
+        })
+
         if (!response.ok) {
             const error = await response.json().catch(() => ({}))
+            console.error('Backend scraper failed:', error)
             throw new Error(error.message || `Backend returned ${response.status}`)
         }
 
         const data = await response.json()
+
+        console.log('Backend scraper data:', {
+            hasContent: !!data.content,
+            contentLength: data.content?.length || 0,
+            tier: data.extractionTier
+        })
 
         // Transform backend response to match frontend expectations
         return NextResponse.json({
