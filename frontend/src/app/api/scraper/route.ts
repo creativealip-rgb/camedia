@@ -14,15 +14,20 @@ export async function POST(request: Request) {
         // Call the backend NestJS advanced scraper service
         const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
+        // Build headers object with proper typing
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+        }
+
+        // Add authorization header if present
+        const authHeader = request.headers.get('authorization')
+        if (authHeader) {
+            headers['Authorization'] = authHeader
+        }
+
         const response = await fetch(`${backendUrl}/api/scraper/scrape`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // Forward authorization if present
-                ...((request.headers.get('authorization')) && {
-                    'Authorization': request.headers.get('authorization')
-                })
-            },
+            headers,
             body: JSON.stringify({ url }),
         })
 
