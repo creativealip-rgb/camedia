@@ -10,7 +10,7 @@ export interface RssFeed {
     error?: string
 }
 
-const STORAGE_KEY = 'camedia_rss_feeds'
+const STORAGE_KEY = 'contently_rss_feeds'
 
 // Default feeds to get started
 const DEFAULT_FEEDS: RssFeed[] = [

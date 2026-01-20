@@ -33,7 +33,7 @@ export default function LoginPage() {
                             <Sparkles className="h-6 w-6 text-white" />
                         </div>
                         <span className="font-bold text-2xl bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
-                            Camedia AI
+                            Contently
                         </span>
                     </Link>
                 </div>

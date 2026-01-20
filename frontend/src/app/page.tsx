@@ -138,7 +138,7 @@ export default function LandingPage() {
               </div>
             </div>
             <span className="font-bold text-xl tracking-tight">
-              Camedia<span className="text-gradient">.ai</span>
+              Contently
             </span>
           </Link>
 
@@ -185,16 +185,14 @@ export default function LandingPage() {
             </div>
 
             {/* Headline */}
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 animate-fade-up stagger-1" style={{ opacity: 0 }}>
-              Turn any URL into{' '}
-              <span className="text-gradient">SEO-Optimized</span>
-              <br />WordPress Posts
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-8 animate-fade-up stagger-1 leading-tight" style={{ opacity: 0 }}>
+              Create <span className="text-gradient">Viral-Ready</span><br />
+              Content Instantly
             </h1>
 
             {/* Subheadline */}
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-up stagger-2" style={{ opacity: 0 }}>
-              AI-powered content automation that transforms web pages into unique,
-              high-quality articles. Complete with images, SEO meta, and one-click publishing.
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-12 animate-fade-up stagger-2 leading-relaxed" style={{ opacity: 0 }}>
+              Stop wasting hours on writing. Turn any URL into a high-ranking, SEO-optimized WordPress article with the power of advanced AI.
             </p>
 
             {/* CTA Buttons */}
@@ -304,7 +302,7 @@ export default function LandingPage() {
               Loved by content creators
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Join hundreds of writers, agencies, and businesses who trust Camedia AI.
+              Join hundreds of writers, agencies, and businesses who trust Contently.
             </p>
           </div>
 
@@ -357,7 +355,7 @@ export default function LandingPage() {
               </span>
 
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Tertarik dengan Camedia AI?
+                Tertarik dengan Contently?
               </h2>
 
               <p className="text-muted-foreground mb-10 max-w-lg mx-auto text-lg">
@@ -396,7 +394,7 @@ export default function LandingPage() {
             Ready to automate your content?
           </h2>
           <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Join hundreds of content creators who save hours every week with Camedia AI. Start your free trial today.
+            Join hundreds of content creators who save hours every week with Contently. Start your free trial today.
           </p>
           <Link href="/register">
             <Button className="btn-premium text-base h-12 px-10 flex items-center gap-2 mx-auto">

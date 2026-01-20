@@ -28,7 +28,7 @@ async function bootstrap() {
 
   // Swagger API Documentation
   const config = new DocumentBuilder()
-    .setTitle('Camedia AI API')
+    .setTitle('Contently API')
     .setDescription('Content Automation Platform API Documentation')
     .setVersion('1.0')
     .addBearerAuth()
@@ -50,7 +50,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
-  console.log(`🚀 Camedia AI Backend running on: http://localhost:${port}`);
+  console.log(`🚀 Contently Backend running on: http://localhost:${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
 

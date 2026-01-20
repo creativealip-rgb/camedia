@@ -10,6 +10,7 @@ export class OpenAiService {
     constructor(private configService: ConfigService) {
         this.openai = new OpenAI({
             apiKey: this.configService.get('OPENAI_API_KEY'),
+            baseURL: this.configService.get('OPENAI_BASE_URL'),
         });
         this.model = this.configService.get('OPENAI_MODEL') || 'gpt-4o';
     }

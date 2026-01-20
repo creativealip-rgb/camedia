@@ -11,7 +11,7 @@ export interface WordPressSite {
     error?: string
 }
 
-const STORAGE_KEY = 'camedia_wp_sites'
+const STORAGE_KEY = 'contently_wp_sites'
 
 export const getSites = (): WordPressSite[] => {
     if (typeof window === 'undefined') return []

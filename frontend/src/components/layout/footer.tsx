@@ -78,7 +78,7 @@ export function Footer() {
                                 </div>
                             </div>
                             <span className="font-bold text-xl tracking-tight">
-                                Camedia<span className="text-gradient">.ai</span>
+                                Contently
                             </span>
                         </Link>
                         <p className="text-muted-foreground max-w-xs leading-relaxed">
@@ -157,7 +157,7 @@ export function Footer() {
                 {/* Bottom Bar */}
                 <div className="mt-16 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-sm text-muted-foreground">
-                        © {new Date().getFullYear()} Camedia AI. All rights reserved.
+                        © {new Date().getFullYear()} Contently. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
                         <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">

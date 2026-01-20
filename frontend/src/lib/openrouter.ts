@@ -25,8 +25,8 @@ export class OpenRouterClient {
             headers: {
                 'Authorization': `Bearer ${this.apiKey}`,
                 'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://camedia.app', // Optional: for OpenRouter analytics
-                'X-Title': 'Camedia AI Content Lab', // Optional: for OpenRouter analytics
+                'HTTP-Referer': 'https://contently.app', // Optional: for OpenRouter analytics
+                'X-Title': 'Contently Content Lab', // Optional: for OpenRouter analytics
             },
             body: JSON.stringify(payload),
         })

@@ -81,7 +81,7 @@ export function Navbar() {
                             </div>
                         </div>
                         <span className="hidden font-bold text-xl tracking-tight md:block">
-                            Camedia<span className="text-gradient">.ai</span>
+                            Contently
                         </span>
                     </Link>
                 </div>

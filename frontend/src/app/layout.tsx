@@ -10,7 +10,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'Camedia AI - Content Automation Platform',
+  title: 'Contently - Content Automation Platform',
   description: 'Turn any URL into unique, SEO-optimized WordPress posts with AI-powered content automation.',
   keywords: 'AI content, WordPress automation, SEO, content generation, RSS feeds',
 }
