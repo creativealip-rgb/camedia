@@ -11,10 +11,13 @@ export class AiService {
     ) { }
 
     async generateContent(userId: string, dto: GenerateContentDto) {
-        // Check token balance
-        const hasBalance = await this.billingService.checkBalance(userId, 1);
-        if (!hasBalance) {
-            throw new BadRequestException('Insufficient token balance');
+        // TEMP: Skip billing check for testing without auth
+        if (userId !== 'temp-user-id') {
+            // Check token balance
+            const hasBalance = await this.billingService.checkBalance(userId, 1);
+            if (!hasBalance) {
+                throw new BadRequestException('Insufficient token balance');
+            }
         }
 
         // Generate content
@@ -23,8 +26,10 @@ export class AiService {
             dto.options,
         );
 
-        // Deduct tokens
-        await this.billingService.deductTokens(userId, 1, 'Article generation');
+        // Deduct tokens (skip for temp user)
+        if (userId !== 'temp-user-id') {
+            await this.billingService.deductTokens(userId, 1, 'Article generation');
+        }
 
         return {
             content,

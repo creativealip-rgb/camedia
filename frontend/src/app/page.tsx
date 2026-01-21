@@ -418,7 +418,7 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="mailto:hello@camedia.ai">
+                <a href="mailto:hello@contenly.ai">
                   <Button className="btn-premium text-base h-12 px-8 flex items-center gap-2">
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />

@@ -8,11 +8,28 @@ export class OpenAiService {
     private model: string;
 
     constructor(private configService: ConfigService) {
-        this.openai = new OpenAI({
-            apiKey: this.configService.get('OPENAI_API_KEY'),
-            baseURL: this.configService.get('OPENAI_BASE_URL'),
+        console.log('🔍 OpenAiService: Initializing...');
+        console.log('📝 All env vars:', {
+            OPENROUTER_API_KEY: this.configService.get('OPENROUTER_API_KEY') ? 'SET' : 'NOT SET',
+            OPENROUTER_BASE_URL: this.configService.get('OPENROUTER_BASE_URL'),
+            OPENROUTER_MODEL: this.configService.get('OPENROUTER_MODEL'),
         });
-        this.model = this.configService.get('OPENAI_MODEL') || 'gpt-4o';
+
+        const apiKey = this.configService.get('OPENROUTER_API_KEY');
+        const baseURL = this.configService.get('OPENROUTER_BASE_URL');
+
+        if (!apiKey) {
+            console.error('❌ OPENROUTER_API_KEY is undefined!');
+            throw new Error('OPENROUTER_API_KEY is not set in environment variables');
+        }
+
+        console.log('✅ OpenAI client initializing with OpenRouter');
+        this.openai = new OpenAI({
+            apiKey,
+            baseURL,
+        });
+        this.model = this.configService.get('OPENROUTER_MODEL') || 'gpt-4o';
+        console.log(`✅ Model set to: ${this.model}`);
     }
 
     async generateContent(
