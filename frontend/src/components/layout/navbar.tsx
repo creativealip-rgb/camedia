@@ -89,7 +89,7 @@ export function Navbar() {
                             </div>
                         </div>
                         <span className="hidden font-bold text-xl tracking-tight md:block">
-                            Contently
+                            Contenly
                         </span>
                     </Link>
                 </div>

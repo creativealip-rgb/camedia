@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { useSidebarStore } from '@/stores'
+import { useSidebarStore, useAuthStore } from '@/stores'
 
 // Custom SVG icons for a unique look
 const icons = {
@@ -88,6 +88,7 @@ const navItems = [
 export function Sidebar() {
     const pathname = usePathname()
     const { isCollapsed, setCollapsed, isOpen, setOpen } = useSidebarStore()
+    const { user } = useAuthStore()
 
     // Handle mobile close on navigation
     const handleMobileLinkClick = () => {
@@ -171,14 +172,14 @@ export function Sidebar() {
                             isCollapsed ? "md:justify-center" : "md:justify-start"
                         )}>
                             <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold shadow-lg">
-                                N
+                                {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
                             </div>
                             <div className={cn(
                                 "flex flex-col overflow-hidden transition-all duration-300",
                                 isCollapsed ? "md:w-0 md:opacity-0" : "md:w-auto md:opacity-100"
                             )}>
-                                <span className="text-sm font-medium truncate">New User</span>
-                                <span className="text-xs text-muted-foreground truncate">user@example.com</span>
+                                <span className="text-sm font-medium truncate">{user?.fullName || 'User'}</span>
+                                <span className="text-xs text-muted-foreground truncate">{user?.email || 'user@example.com'}</span>
                             </div>
                         </div>
 

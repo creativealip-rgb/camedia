@@ -1,18 +1,39 @@
-import { IsString, IsOptional, IsArray, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsEnum, ValidateNested } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+
+class GenerateOptionsDto {
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    tone?: string;
+
+    @ApiPropertyOptional({ enum: ['short', 'medium', 'long'] })
+    @IsOptional()
+    @IsEnum(['short', 'medium', 'long'])
+    length?: 'short' | 'medium' | 'long';
+
+    @ApiPropertyOptional({ type: [String] })
+    @IsOptional()
+    @IsArray()
+    keywords?: string[];
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    targetLanguage?: string;
+}
 
 export class GenerateContentDto {
     @ApiProperty({ description: 'Original content to rewrite' })
     @IsString()
     originalContent: string;
 
-    @ApiPropertyOptional()
-    options?: {
-        tone?: string;
-        length?: 'short' | 'medium' | 'long';
-        keywords?: string[];
-        targetLanguage?: string;
-    };
+    @ApiPropertyOptional({ type: GenerateOptionsDto })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => GenerateOptionsDto)
+    options?: GenerateOptionsDto;
 }
 
 export class GenerateSeoDto {
