@@ -77,7 +77,11 @@ export default function IntegrationsPage() {
 
     // Load sites on mount
     useEffect(() => {
-        setSites(getSites())
+        const loadSites = async () => {
+            const fetchedSites = await getSites()
+            setSites(fetchedSites)
+        }
+        loadSites()
     }, [])
 
     const getStatusBadge = (status: string) => {
@@ -166,34 +170,22 @@ export default function IntegrationsPage() {
                 wpUrl = `https://${wpUrl}`
             }
 
-            const params = new URLSearchParams({
-                wpUrl,
-                username: formData.username,
-                appPassword: formData.appPassword
-            })
-
-            const response = await fetch(`/api/wordpress?${params.toString()}`)
-            const data = await response.json()
-
-            if (!response.ok || data.error) {
-                throw new Error(data.error || 'Connection failed')
-            }
-
-            // Success - Add to store
-            const newSite: WordPressSite = {
-                id: Date.now().toString(),
+            // Add site via API
+            const newSite = await addSite({
                 name: formData.name,
                 url: wpUrl,
                 username: formData.username,
                 appPassword: formData.appPassword,
-                status: 'connected',
-                lastSync: new Date().toISOString(),
-                articlesPublished: 0
-            }
+                status: 'PENDING'
+            })
 
-            setSites(addSite(newSite))
-            setIsAddOpen(false)
-            setFormData({ name: '', url: '', username: '', appPassword: '' })
+            if (newSite) {
+                // Reload sites
+                const updatedSites = await getSites()
+                setSites(updatedSites)
+                setIsAddOpen(false)
+                setFormData({ name: '', url: '', username: '', appPassword: '' })
+            }
         } catch (error: any) {
             setConnectionError(error.message || 'Failed to connect to WordPress site')
         } finally {
@@ -201,9 +193,15 @@ export default function IntegrationsPage() {
         }
     }
 
-    const handleRemoveSite = (id: string) => {
+    const handleRemoveSite = async (id: string) => {
         if (confirm('Are you sure you want to remove this site?')) {
-            setSites(removeSite(id))
+            try {
+                await removeSite(id)
+                const updatedSites = await getSites()
+                setSites(updatedSites)
+            } catch (error: any) {
+                alert('Failed to remove site: ' + error.message)
+            }
         }
     }
 

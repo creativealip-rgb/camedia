@@ -19,6 +19,7 @@ import { WordpressModule } from './modules/wordpress/wordpress.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     BillingModule,
     NotificationsModule,
     AnalyticsModule,
+    IntegrationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
