@@ -282,7 +282,7 @@ export default function IntegrationsPage() {
             const params = new URLSearchParams({
                 wpUrl: site.url,
                 username: site.username,
-                appPassword: site.appPassword
+                appPassword: site.appPassword || ''
             })
             // Use categories endpoint as lightweight health check
             const response = await fetch(`/api/wordpress/categories?${params.toString()}`)
