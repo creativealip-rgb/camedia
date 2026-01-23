@@ -17,7 +17,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 // Get all sites from backend
 export const getSites = async (): Promise<WordPressSite[]> => {
     try {
-        const response = await fetch(`${API_BASE}/api/integrations/sites`, {
+        const response = await fetch(`${API_BASE}/integrations/sites`, {
             credentials: 'include', // Send auth cookies
         })
 
@@ -36,7 +36,7 @@ export const getSites = async (): Promise<WordPressSite[]> => {
 // Add a new site
 export const addSite = async (site: Omit<WordPressSite, 'id'>): Promise<WordPressSite | null> => {
     try {
-        const response = await fetch(`${API_BASE}/api/integrations/sites`, {
+        const response = await fetch(`${API_BASE}/integrations/sites`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export const getActiveSite = async (): Promise<WordPressSite | null> => {
 // Remove a site
 export const removeSite = async (id: string): Promise<void> => {
     try {
-        const response = await fetch(`${API_BASE}/api/integrations/sites/${id}`, {
+        const response = await fetch(`${API_BASE}/integrations/sites/${id}`, {
             method: 'DELETE',
             credentials: 'include',
         })
@@ -89,7 +89,7 @@ export const removeSite = async (id: string): Promise<void> => {
 // Update a site
 export const updateSite = async (id: string, updates: Partial<WordPressSite>): Promise<WordPressSite | null> => {
     try {
-        const response = await fetch(`${API_BASE}/api/integrations/sites/${id}`, {
+        const response = await fetch(`${API_BASE}/integrations/sites/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -113,7 +113,7 @@ export const updateSite = async (id: string, updates: Partial<WordPressSite>): P
 // Test site connection
 export const testSiteConnection = async (id: string): Promise<{ success: boolean; message: string }> => {
     try {
-        const response = await fetch(`${API_BASE}/api/integrations/sites/${id}/test`, {
+        const response = await fetch(`${API_BASE}/integrations/sites/${id}/test`, {
             method: 'POST',
             credentials: 'include',
         })
@@ -133,7 +133,7 @@ export const testSiteConnection = async (id: string): Promise<{ success: boolean
 // Refresh categories from WordPress
 export const refreshCategories = async (siteId: string): Promise<any> => {
     try {
-        const response = await fetch(`${API_BASE}/api/integrations/sites/${siteId}/categories/refresh`, {
+        const response = await fetch(`${API_BASE}/integrations/sites/${siteId}/categories/refresh`, {
             method: 'POST',
             credentials: 'include',
         })
@@ -153,7 +153,7 @@ export const refreshCategories = async (siteId: string): Promise<any> => {
 // Get category mappings
 export const getCategoryMappings = async (siteId: string): Promise<any[]> => {
     try {
-        const response = await fetch(`${API_BASE}/api/integrations/sites/${siteId}/categories`, {
+        const response = await fetch(`${API_BASE}/integrations/sites/${siteId}/categories`, {
             credentials: 'include',
         })
 
