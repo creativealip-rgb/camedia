@@ -97,7 +97,11 @@ export class ArticlesService {
                 metaTitle: dto.metaTitle,
                 metaDescription: dto.metaDescription,
                 slug: dto.slug,
-                status: 'DRAFT',
+                status: (dto.status as any) || 'DRAFT',
+                wpPostId: dto.wpPostId,
+                wpPostUrl: dto.wpPostUrl,
+                wpSiteId: dto.wpSiteId,
+                feedItemId: dto.feedItemId,
                 tokensUsed: dto.tokensUsed || 0,
             })
             .returning();
@@ -112,6 +116,7 @@ export class ArticlesService {
             .update(article)
             .set({
                 ...dto,
+                status: dto.status ? (dto.status as any) : undefined,
                 updatedAt: new Date(),
             })
             .where(eq(article.id, id))

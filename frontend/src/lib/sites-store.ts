@@ -12,7 +12,9 @@ export interface WordPressSite {
     categoriesCache?: any[]
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const API_BASE = typeof window === 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api')
+    : '/api'
 
 // Get all sites from backend
 export const getSites = async (): Promise<WordPressSite[]> => {

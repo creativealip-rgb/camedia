@@ -14,7 +14,9 @@ export interface RssFeed {
     updatedAt?: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+const API_BASE = typeof window === 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api')
+    : '/api'
 
 // Get all feeds from backend
 export const getFeeds = async (): Promise<RssFeed[]> => {

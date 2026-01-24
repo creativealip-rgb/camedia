@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { WordpressController } from './wordpress.controller';
 import { WordpressService } from './wordpress.service';
 import { AuthModule } from '../auth/auth.module';
+import { ArticlesModule } from '../articles/articles.module';
 
 @Module({
-    imports: [AuthModule],
+    imports: [AuthModule, ArticlesModule],
     controllers: [WordpressController],
     providers: [WordpressService],
     exports: [WordpressService],

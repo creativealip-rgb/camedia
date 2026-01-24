@@ -90,6 +90,7 @@ export default function ContentLabPage() {
     // WordPress categories
     const [wpCategories, setWpCategories] = useState<Array<{ id: number; name: string }>>([])
     const [selectedCategory, setSelectedCategory] = useState<number | null>(null)
+    const [generatedArticleId, setGeneratedArticleId] = useState<string | null>(null)
     const [isFetchingCategories, setIsFetchingCategories] = useState(false)
 
     // Sites state
@@ -311,7 +312,9 @@ Source: ${article.url}`)
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     content: sourceContent,
-                    title: selectedArticle?.title,
+                    title: selectedArticle?.title || 'Rewritten Article',
+                    sourceUrl: selectedArticle?.url || scrapeUrl || '',
+                    feedItemId: selectedArticle?.id,
                     tone: aiTone,
                     style: aiStyle,
                     targetLength: aiLength,
@@ -324,6 +327,9 @@ Source: ${article.url}`)
             if (result.success && result.data) {
                 setGeneratedContent(result.data.content)
                 setGeneratedTitle(result.data.title)
+                if (result.data.articleId) {
+                    setGeneratedArticleId(result.data.articleId)
+                }
             } else {
                 alert(`AI Rewrite failed: ${result.error || 'Unknown error'}`)
             }
@@ -398,6 +404,9 @@ Source: ${article.url}`)
                     content: generatedContent,
                     status,
                     categories: selectedCategory ? [selectedCategory] : undefined,
+                    sourceUrl: selectedArticle?.url || sourceContent || '',
+                    originalContent: selectedArticle?.content || sourceContent || '',
+                    feedItemId: selectedArticle?.id,
                 }),
             })
 
@@ -449,7 +458,9 @@ Source: ${article.url}`)
                     content: generatedContent,
                     status: 'future',
                     categories: selectedCategory ? [selectedCategory] : undefined,
-                    date: scheduledDateTime,
+                    sourceUrl: selectedArticle?.url || sourceContent || '',
+                    originalContent: selectedArticle?.content || sourceContent || '',
+                    feedItemId: selectedArticle?.id,
                 }),
             })
 

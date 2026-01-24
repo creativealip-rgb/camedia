@@ -30,8 +30,7 @@ export class WordpressController {
     @Post('sites/:id/test')
     @ApiOperation({ summary: 'Test site connection' })
     async testConnection(@Param('id') siteId: string) {
-        // Implementation would get site and test
-        return { connected: true };
+        return this.wordpressService.verifySiteConnection(siteId);
     }
 
     @Get('sites/:id/categories')
@@ -50,7 +49,17 @@ export class WordpressController {
     @ApiOperation({ summary: 'Publish article to WordPress' })
     async publishArticle(
         @CurrentUser() user: User,
-        @Body() dto: { title: string; content: string; status: string; categories?: number[]; date?: string }
+        @Body() dto: {
+            title: string;
+            content: string;
+            status: string;
+            categories?: number[];
+            date?: string;
+            sourceUrl?: string;
+            originalContent?: string;
+            feedItemId?: string;
+            articleId?: string;
+        }
     ) {
         return this.wordpressService.publishArticle(user.id, dto);
     }

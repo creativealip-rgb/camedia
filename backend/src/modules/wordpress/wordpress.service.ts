@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { eq, and } from 'drizzle-orm';
 import { DrizzleService } from '../../db/drizzle.service';
 import { wpSite, categoryMapping } from '../../db/schema';
+import { ArticlesService } from '../articles/articles.service';
 import axios from 'axios';
 import * as crypto from 'crypto';
 
@@ -13,6 +14,7 @@ export class WordpressService {
     constructor(
         private drizzle: DrizzleService,
         private configService: ConfigService,
+        private articlesService: ArticlesService,
     ) {
         this.encryptionKey = this.configService.get('ENCRYPTION_KEY') || 'default-encryption-key-32bytes!';
     }
@@ -95,6 +97,37 @@ export class WordpressService {
             return response.status === 200;
         } catch {
             return false;
+        }
+    }
+
+    async verifySiteConnection(siteId: string): Promise<{ connected: boolean; message?: string }> {
+        const site = await this.db.query.wpSite.findFirst({
+            where: eq(wpSite.id, siteId),
+        });
+
+        if (!site) throw new NotFoundException('Site not found');
+
+        try {
+            const appPassword = this.decrypt(site.appPasswordEncrypted);
+            const isConnected = await this.testConnection(site.url, site.username, appPassword);
+
+            // Update last health check
+            if (isConnected) {
+                await this.db
+                    .update(wpSite)
+                    .set({ status: 'CONNECTED', lastHealthCheck: new Date() })
+                    .where(eq(wpSite.id, siteId));
+            } else {
+                await this.db
+                    .update(wpSite)
+                    .set({ status: 'ERROR' })
+                    .where(eq(wpSite.id, siteId));
+            }
+
+            return { connected: isConnected };
+        } catch (error: any) {
+            console.error('[verifySiteConnection] Error:', error);
+            return { connected: false, message: error.message };
         }
     }
 
@@ -194,7 +227,17 @@ export class WordpressService {
 
     async publishArticle(
         userId: string,
-        dto: { title: string; content: string; status: string; categories?: number[]; date?: string }
+        dto: {
+            title: string;
+            content: string;
+            status: string;
+            categories?: number[];
+            date?: string;
+            sourceUrl?: string;
+            originalContent?: string;
+            feedItemId?: string;
+            articleId?: string;
+        }
     ) {
         // Get user's active site (single-site model)
         const site = await this.db.query.wpSite.findFirst({
@@ -227,7 +270,6 @@ export class WordpressService {
             }
 
             console.log('[publishArticle] Publishing to:', `${site.url}/wp-json/wp/v2/posts`);
-            console.log('[publishArticle] Post data:', { ...postData, content: '...' });
 
             const response = await axios.post(
                 `${site.url}/wp-json/wp/v2/posts`,
@@ -238,6 +280,36 @@ export class WordpressService {
             );
 
             console.log('[publishArticle] Success! Post ID:', response.data.id);
+
+            // Save to local database
+            try {
+                const articleData = {
+                    title: dto.title,
+                    generatedContent: dto.content,
+                    originalContent: dto.originalContent || '',
+                    sourceUrl: dto.sourceUrl || '',
+                    status: (dto.status === 'publish' ? 'PUBLISHED' : dto.status === 'future' ? 'PUBLISHED' : 'DRAFT') as any,
+                    wpPostId: String(response.data.id),
+                    wpPostUrl: response.data.link,
+                    wpSiteId: site.id,
+                    feedItemId: dto.feedItemId,
+                    metaTitle: dto.title, // Default to title
+                    slug: response.data.slug,
+                };
+
+                if (dto.articleId) {
+                    // Update existing draft
+                    await this.articlesService.update(userId, dto.articleId, articleData);
+                    console.log('[publishArticle] Updated existing article:', dto.articleId);
+                } else {
+                    // Create new article
+                    await this.articlesService.create(userId, articleData);
+                    console.log('[publishArticle] Created new article');
+                }
+            } catch (dbError) {
+                console.error('[publishArticle] Failed to save/update local DB:', dbError);
+                // Don't fail the request if WP publish succeeded, but log it
+            }
 
             return {
                 success: true,
