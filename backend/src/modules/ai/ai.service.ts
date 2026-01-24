@@ -2,12 +2,14 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { OpenAiService } from './services/openai.service';
 import { BillingService } from '../billing/billing.service';
 import { GenerateContentDto, GenerateSeoDto, GenerateImageDto } from './dto';
+import { ArticlesService } from '../articles/articles.service';
 
 @Injectable()
 export class AiService {
     constructor(
         private openAiService: OpenAiService,
         private billingService: BillingService,
+        private articlesService: ArticlesService,
     ) { }
 
     async generateContent(userId: string, dto: GenerateContentDto) {
@@ -23,7 +25,7 @@ export class AiService {
         // Generate content
         const content = await this.openAiService.generateContent(
             dto.originalContent,
-            dto.options,
+            dto.options as any,
         );
 
         // Deduct tokens (skip for temp user)
@@ -31,10 +33,32 @@ export class AiService {
             await this.billingService.deductTokens(userId, 1, 'Article generation');
         }
 
+        // Save generated content as a draft article
+        let articleId = null;
+        try {
+            const savedArticle = await this.articlesService.create(userId, {
+                title: dto.title || 'AI Generated Article',
+                generatedContent: content,
+                originalContent: dto.originalContent,
+                sourceUrl: dto.sourceUrl || '',
+                status: 'DRAFT',
+                // Only pass feedItemId if it's a valid UUID
+                feedItemId: (dto.feedItemId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dto.feedItemId))
+                    ? dto.feedItemId
+                    : undefined,
+                tokensUsed: 1,
+            });
+            articleId = savedArticle.id;
+        } catch (error) {
+            console.error('Failed to auto-save generated article:', error);
+            // Don't fail the request if auto-save fails
+        }
+
         return {
             content,
             tokensUsed: 1,
             wordCount: content.split(/\s+/).length,
+            articleId,
         };
     }
 

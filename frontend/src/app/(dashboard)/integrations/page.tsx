@@ -131,16 +131,10 @@ export default function IntegrationsPage() {
         try {
             const data = await fetchWithAuth('/wordpress/sites')
             if (Array.isArray(data)) {
-                // Transform backend site format to normalize status
-                const normalizedSites = data.map((site: any) => ({
-                    ...site,
-                    status: site.status.toLowerCase() as 'connected' | 'error'
-                }))
-
-                setSites(normalizedSites)
+                setSites(data)
 
                 // Sync to localStorage for Content Lab to access
-                const sitesForLocalStorage = normalizedSites.map((site: any) => ({
+                const sitesForLocalStorage = data.map((site: any) => ({
                     id: site.id,
                     name: site.name,
                     url: site.url,
@@ -191,7 +185,7 @@ export default function IntegrationsPage() {
         console.log('[handleRefreshCategories] Sites statuses:', sites.map(s => ({ name: s.name, status: s.status, statusType: typeof s.status })))
 
         // Get first connected site (single-site model)
-        const targetSite = sites.find(s => s.status === 'CONNECTED')
+        const targetSite = sites.find(s => s.status === 'CONNECTED' || s.status.toLowerCase() === 'connected')
 
         console.log('[handleRefreshCategories] Target site found:', targetSite)
 
@@ -279,21 +273,25 @@ export default function IntegrationsPage() {
 
     const handleTestConnection = async (site: WordPressSite) => {
         try {
-            const params = new URLSearchParams({
-                wpUrl: site.url,
-                username: site.username,
-                appPassword: site.appPassword || ''
+            // Call backend to verify connection using stored credentials
+            const response = await fetchWithAuth(`/wordpress/sites/${site.id}/test`, {
+                method: 'POST'
             })
-            // Use categories endpoint as lightweight health check
-            const response = await fetch(`/api/wordpress/categories?${params.toString()}`)
 
-            if (response.ok) {
+            console.log('[handleTestConnection] Response:', response)
+
+            if (response.connected) {
                 alert(`Connection to ${site.name} is working perfectly!`)
+
+                // Update local status too
+                setSites(sites.map(s => s.id === site.id ? { ...s, status: 'connected' } : s))
             } else {
-                const data = await response.json()
-                alert(`Connection failed: ${data.error || 'Unknown error'}`)
+                alert(`Connection failed: ${response.message || 'Unknown error'}`)
+                // Update local status
+                setSites(sites.map(s => s.id === site.id ? { ...s, status: 'error', error: response.message } : s))
             }
         } catch (error: any) {
+            console.error('[handleTestConnection] Error:', error)
             alert(`Network error: ${error.message}`)
         }
     }

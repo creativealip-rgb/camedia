@@ -9,7 +9,7 @@ import { feed, feedItem } from '../../db/schema';
 export class FeedsService {
     constructor(
         private drizzle: DrizzleService,
-        @InjectQueue('feed-polling') private feedQueue: Queue,
+        // @InjectQueue('feed-polling') private feedQueue: Queue,
     ) { }
 
     get db() {
@@ -24,31 +24,39 @@ export class FeedsService {
     }
 
     async create(userId: string, data: { name: string; url: string; pollingIntervalMinutes?: number }) {
-        const [newFeed] = await this.db
-            .insert(feed)
-            .values({
-                userId,
-                name: data.name,
-                url: data.url,
-                pollingIntervalMinutes: data.pollingIntervalMinutes || 15,
-            })
-            .returning();
-
-        // Trigger immediate poll for new feed (optional - depends on Redis/Bull)
+        console.log('[FeedsService] Creating feed for user:', userId, 'Data:', data);
         try {
-            await this.triggerPoll(newFeed.id);
-        } catch (error) {
-            console.warn('[FeedsService] Could not trigger poll (Redis may not be running):', error.message);
-        }
+            const [newFeed] = await this.db
+                .insert(feed)
+                .values({
+                    userId,
+                    name: data.name,
+                    url: data.url,
+                    pollingIntervalMinutes: data.pollingIntervalMinutes || 15,
+                })
+                .returning();
 
-        // Schedule recurring polling (optional - depends on Redis/Bull)  
-        try {
-            await this.scheduleFeedPolling(newFeed.id, newFeed.pollingIntervalMinutes);
-        } catch (error) {
-            console.warn('[FeedsService] Could not schedule polling (Redis may not be running):', error.message);
-        }
+            console.log('[FeedsService] Feed created in DB:', newFeed?.id);
 
-        return newFeed;
+            // Trigger immediate poll for new feed (optional - depends on Redis/Bull)
+            try {
+                await this.triggerPoll(newFeed.id);
+            } catch (error) {
+                console.warn('[FeedsService] Could not trigger poll (Redis may not be running):', error.message);
+            }
+
+            // Schedule recurring polling (optional - depends on Redis/Bull)  
+            try {
+                await this.scheduleFeedPolling(newFeed.id, newFeed.pollingIntervalMinutes);
+            } catch (error) {
+                console.warn('[FeedsService] Could not schedule polling (Redis may not be running):', error.message);
+            }
+
+            return newFeed;
+        } catch (error) {
+            console.error('[FeedsService] Error creating feed:', error);
+            throw error;
+        }
     }
 
     async delete(userId: string, id: string) {
@@ -58,11 +66,13 @@ export class FeedsService {
 
     async triggerPoll(feedId: string) {
         // Add job to queue for immediate polling
-        await this.feedQueue.add('poll-feed', { feedId });
+        // await this.feedQueue.add('poll-feed', { feedId });
+        console.log('Skipping poll (Redis disabled)');
     }
 
     async scheduleFeedPolling(feedId: string, intervalMinutes: number) {
         // Schedule recurring job based on pollingIntervalMinutes
+        /*
         await this.feedQueue.add(
             'poll-feed',
             { feedId },
@@ -73,5 +83,7 @@ export class FeedsService {
                 jobId: `feed-${feedId}-recurring`, // Unique ID to prevent duplicates
             }
         );
+        */
+        console.log('Skipping schedule (Redis disabled)');
     }
 }

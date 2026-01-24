@@ -4,7 +4,9 @@
 
 const MIGRATION_KEY = 'contently_feeds_migrated'
 const LEGACY_STORAGE_KEY = 'contently_rss_feeds'
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+const API_BASE = typeof window === 'undefined'
+    ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api')
+    : '/api'
 
 export const migrateLocalStorageFeeds = async (): Promise<void> => {
     // Check if migration already completed

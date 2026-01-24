@@ -5,6 +5,8 @@ export interface AIRewriteRequest {
     style?: 'blog' | 'news' | 'tutorial' | 'review'
     targetLength?: 'shorter' | 'same' | 'longer'
     includeMetadata?: boolean
+    sourceUrl?: string
+    feedItemId?: string
 }
 
 export interface AIRewriteResponse {
@@ -15,6 +17,7 @@ export interface AIRewriteResponse {
         excerpt: string
         metaDescription?: string
         seoKeywords?: string[]
+        articleId?: string
     }
     error?: string
 }

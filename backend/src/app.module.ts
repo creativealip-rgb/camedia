@@ -39,13 +39,13 @@ import { CategoryMappingModule } from './modules/category-mapping/category-mappi
     ]),
 
     // Redis Queue (BullMQ) - Optional, comment out if not using Redis
-    BullModule.forRoot({
-      redis: {
-        host: process.env.REDIS_HOST || 'localhost',
-        port: parseInt(process.env.REDIS_PORT || '6379'),
-        password: process.env.REDIS_PASSWORD || undefined,
-      },
-    }),
+    // BullModule.forRoot({
+    //   redis: {
+    //     host: process.env.REDIS_HOST || 'localhost',
+    //     port: parseInt(process.env.REDIS_PORT || '6379'),
+    //     password: process.env.REDIS_PASSWORD || undefined,
+    //   },
+    // }),
 
     // Database (Drizzle)
     DrizzleModule,

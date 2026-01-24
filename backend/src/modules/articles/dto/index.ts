@@ -37,6 +37,31 @@ export class CreateArticleDto {
     @IsNumber()
     @IsOptional()
     tokensUsed?: number;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    wpPostId?: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    wpPostUrl?: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    wpSiteId?: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    feedItemId?: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    status?: string;
 }
 
 export class UpdateArticleDto extends PartialType(CreateArticleDto) {

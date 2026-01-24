@@ -9,7 +9,7 @@ export class DrizzleService implements OnModuleDestroy {
     public db: PostgresJsDatabase<typeof schema>;
 
     constructor() {
-        this.client = postgres(process.env.DATABASE_URL!);
+        this.client = postgres(process.env.DATABASE_URL!, { prepare: false });
         this.db = drizzle(this.client, { schema });
     }
 

@@ -29,6 +29,21 @@ export class GenerateContentDto {
     @IsString()
     originalContent: string;
 
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    title?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    sourceUrl?: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    feedItemId?: string;
+
     @ApiPropertyOptional({ type: GenerateOptionsDto })
     @IsOptional()
     @ValidateNested()
