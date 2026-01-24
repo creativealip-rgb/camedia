@@ -104,7 +104,7 @@ export const auth = betterAuth({
     advanced: {
         defaultCookieAttributes: {
             sameSite: "none",
-            secure: process.env.NODE_ENV === 'production',
+            secure: true, // Required for SameSite: None, works on localhost too
         },
     },
 });
