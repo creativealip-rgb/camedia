@@ -78,6 +78,17 @@ export class AuthController {
     @All('*')
     async handleBetterAuth(@Req() req: Request, @Res() res: Response) {
         console.log('🔵 Better Auth wildcard handler called for:', req.method, req.url);
+
+        // Fix for multiple proxies (Vercel -> Ngrok) causing "https, https" in protocol
+        if (req.headers['x-forwarded-proto']) {
+            const proto = req.headers['x-forwarded-proto'];
+            if (Array.isArray(proto)) {
+                req.headers['x-forwarded-proto'] = proto[0];
+            } else if (typeof proto === 'string' && proto.includes(',')) {
+                req.headers['x-forwarded-proto'] = proto.split(',')[0].trim();
+            }
+        }
+
         // Let Better Auth handle OAuth and other built-in routes
         const handler = toNodeHandler(auth);
         return handler(req, res);

@@ -70,6 +70,7 @@ export function Navbar() {
 
                 const response = await fetch(`${API_BASE_URL}/billing/balance`, {
                     credentials: 'include',
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
                 })
 
                 if (response.ok) {

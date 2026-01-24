@@ -23,6 +23,7 @@ export const getFeeds = async (): Promise<RssFeed[]> => {
     try {
         const response = await fetch(`${API_BASE}/feeds`, {
             credentials: 'include', // Send auth cookies
+            headers: { 'ngrok-skip-browser-warning': 'true' }
         })
 
         if (!response.ok) {
@@ -51,6 +52,7 @@ export const addFeed = async (feed: Omit<RssFeed, 'id' | 'userId' | 'createdAt' 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
             },
             credentials: 'include',
             body: JSON.stringify({
@@ -83,6 +85,7 @@ export const removeFeed = async (id: string): Promise<void> => {
         const response = await fetch(`${API_BASE}/feeds/${id}`, {
             method: 'DELETE',
             credentials: 'include',
+            headers: { 'ngrok-skip-browser-warning': 'true' }
         })
 
         if (!response.ok) {

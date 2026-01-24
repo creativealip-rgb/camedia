@@ -22,6 +22,7 @@ export const auth = betterAuth({
     trustedOrigins: [
         'http://localhost:3000',  // Frontend dev server
         'http://localhost:3001',  // Backend server
+        'https://contenly.vercel.app', // Explicitly add production URL
         ...(process.env.FRONTEND_URL?.split(',') || []),  // Production/staging URLs
     ],
 

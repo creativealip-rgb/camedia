@@ -129,6 +129,7 @@ export default function ContentLabPage() {
 
                 const response = await fetch(`${API_BASE_URL}/wordpress/sites/${activeSite.id}/categories`, {
                     credentials: 'include', // Send session cookies
+                    headers: { 'ngrok-skip-browser-warning': 'true' }
                 })
 
                 if (!response.ok) {
