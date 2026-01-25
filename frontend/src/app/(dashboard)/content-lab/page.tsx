@@ -173,8 +173,7 @@ export default function ContentLabPage() {
         setSourceContent('')
 
         try {
-            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
-            const response = await fetch(`${API_BASE_URL}/rss`, {
+            const response = await fetch('/api/rss', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url: feed.url }),
@@ -254,9 +253,8 @@ export default function ContentLabPage() {
         setIsScanning(true)
 
         try {
-            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
             // Auto-scrape full article content from URL
-            const response = await fetch(`${API_BASE_URL}/scraper`, {
+            const response = await fetch('/api/scraper', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url: article.url })
@@ -308,8 +306,7 @@ Source: ${article.url}`)
         setGeneratedTitle('')
 
         try {
-            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
-            const response = await fetch(`${API_BASE_URL}/ai/rewrite`, {
+            const response = await fetch('/api/ai/rewrite', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -351,8 +348,7 @@ Source: ${article.url}`)
         setSourceContent('')
         setSelectedArticle(null)
         try {
-            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
-            const response = await fetch(`${API_BASE_URL}/scraper`, {
+            const response = await fetch('/api/scraper', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url: scrapeUrl })
