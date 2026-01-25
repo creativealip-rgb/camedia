@@ -173,14 +173,11 @@ export default function ContentLabPage() {
         setSourceContent('')
 
         try {
-            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
-            const response = await fetch(`${API_BASE_URL}/rss`, {
+            const response = await fetch('/api/rss', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'ngrok-skip-browser-warning': 'true'
+                    'Content-Type': 'application/json'
                 },
-                credentials: 'include',
                 body: JSON.stringify({ url: feed.url }),
             })
 
