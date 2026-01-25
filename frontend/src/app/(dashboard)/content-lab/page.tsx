@@ -331,6 +331,7 @@ Source: ${article.url}`)
                     sourceUrl: selectedArticle?.url || scrapeUrl || '',
                     feedItemId: selectedArticle?.id,
                     mode: activeTab === 'idea' ? 'idea' : 'rewrite',
+                    categoryId: selectedCategory || undefined,
                     options: {
                         tone: aiTone,
                         length: aiLength === 'shorter' ? 'short' : aiLength === 'longer' ? 'long' : 'medium',
@@ -759,25 +760,47 @@ Source: ${article.url}`)
                             <p className="text-xs text-muted-foreground">Target article length</p>
                         </div>
 
-                        <div className="flex items-end">
-                            <Button
-                                className="w-full h-10 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
-                                onClick={handleAIRewrite}
-                                disabled={!sourceContent || isRewriting}
+                        {/* Category (Moved for internal links) */}
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Category & Internal Links</Label>
+                            <Select
+                                value={selectedCategory?.toString() || ''}
+                                onValueChange={(val) => setSelectedCategory(parseInt(val))}
+                                disabled={isFetchingCategories || wpCategories.length === 0}
                             >
-                                {isRewriting ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                        Rewriting...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles className="h-4 w-4 mr-2" />
-                                        Rewrite with AI
-                                    </>
-                                )}
-                            </Button>
+                                <SelectTrigger className="h-10">
+                                    <SelectValue placeholder={isFetchingCategories ? "Loading categories..." : wpCategories.length > 0 ? "Select category" : "No categories found"} />
+                                </SelectTrigger>
+                                <SelectContent position="popper" sideOffset={4}>
+                                    {wpCategories.map(category => (
+                                        <SelectItem key={category.id} value={category.id.toString()}>
+                                            {category.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">AI will inject relevant "Baca Juga" links from this category.</p>
                         </div>
+                    </div>
+
+                    <div className="flex items-end">
+                        <Button
+                            className="w-full h-10 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
+                            onClick={handleAIRewrite}
+                            disabled={!sourceContent || isRewriting}
+                        >
+                            {isRewriting ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Rewriting...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="h-4 w-4 mr-2" />
+                                    Rewrite with AI
+                                </>
+                            )}
+                        </Button>
                     </div>
                 </CardContent>
             </Card>
@@ -945,26 +968,7 @@ Source: ${article.url}`)
                     </CardHeader>
                     <CardContent className="space-y-4">
 
-                        <div className="space-y-2">
-                            <Label>Category</Label>
-                            <Select
-                                value={selectedCategory?.toString() || ''}
-                                onValueChange={(val) => setSelectedCategory(parseInt(val))}
-                                disabled={isFetchingCategories || wpCategories.length === 0}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder={isFetchingCategories ? "Loading categories..." : wpCategories.length > 0 ? "Select category" : "No categories found"} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {wpCategories.map(category => (
-                                        <SelectItem key={category.id} value={category.id.toString()}>
-                                            {category.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <p className="text-xs text-muted-foreground">Post will be published to selected category</p>
-                        </div>
+                        {/* Category moved to AI Config */}
 
                         {publishResult && (
                             <div className={`p-3 rounded-md text-sm ${publishResult.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>

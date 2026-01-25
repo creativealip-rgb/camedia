@@ -328,4 +328,33 @@ export class WordpressService {
             );
         }
     }
+    async getRecentPosts(siteId: string, categoryId?: number): Promise<{ title: string; link: string }[]> {
+        const site = await this.db.query.wpSite.findFirst({
+            where: eq(wpSite.id, siteId),
+        });
+
+        if (!site) return [];
+
+        try {
+            const appPassword = this.decrypt(site.appPasswordEncrypted);
+            const auth = Buffer.from(`${site.username}:${appPassword}`).toString('base64');
+
+            let url = `${site.url}/wp-json/wp/v2/posts?per_page=3&status=publish`;
+            if (categoryId) {
+                url += `&categories=${categoryId}`;
+            }
+
+            const response = await axios.get(url, {
+                headers: { Authorization: `Basic ${auth}` },
+            });
+
+            return response.data.map((post: any) => ({
+                title: post.title.rendered,
+                link: post.link,
+            }));
+        } catch (error: any) {
+            console.error('[getRecentPosts] Error:', error.message);
+            return [];
+        }
+    }
 }
