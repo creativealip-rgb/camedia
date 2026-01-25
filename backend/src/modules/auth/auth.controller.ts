@@ -80,6 +80,7 @@ export class AuthController {
         console.log(`🔵 Better Auth: ${req.method} ${req.url}`);
         console.log(`📍 Origin: ${req.headers.origin}`);
         console.log(`📍 X-Forwarded-Proto: ${req.headers['x-forwarded-proto']}`);
+        console.log(`📍 All Headers:`, JSON.stringify(req.headers));
 
         // Fix for multiple proxies (Vercel -> Ngrok) causing "https, https" in protocol
         if (req.headers['x-forwarded-proto']) {

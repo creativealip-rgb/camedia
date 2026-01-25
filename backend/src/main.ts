@@ -29,18 +29,20 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl)
+      // If no origin (like direct curl or same-origin), allow it
       if (!origin) {
         return callback(null, true);
       }
 
       const isAllowed = origins.some(allowedOrigin => {
         if (allowedOrigin === '*') return true;
+        // Exact match or matches the start (for subdomains/paths)
         return origin === allowedOrigin || origin.startsWith(allowedOrigin);
       });
 
       if (isAllowed) {
-        callback(null, true);
+        // Return the origin string itself instead of true to be safe
+        callback(null, origin);
       } else {
         logger.warn(`CORS blocked for origin: ${origin}`);
         callback(new Error('Not allowed by CORS'));
@@ -48,7 +50,8 @@ async function bootstrap() {
     },
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type, Accept, Authorization, x-forwarded-proto',
+    allowedHeaders: 'Content-Type, Accept, Authorization, x-forwarded-proto, cookie',
+    exposedHeaders: 'set-cookie',
   });
 
   // Global prefix
