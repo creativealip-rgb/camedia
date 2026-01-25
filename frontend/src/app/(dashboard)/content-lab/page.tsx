@@ -173,9 +173,14 @@ export default function ContentLabPage() {
         setSourceContent('')
 
         try {
-            const response = await fetch('/api/rss', {
+            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+            const response = await fetch(`${API_BASE_URL}/rss`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                credentials: 'include',
                 body: JSON.stringify({ url: feed.url }),
             })
 
@@ -253,10 +258,15 @@ export default function ContentLabPage() {
         setIsScanning(true)
 
         try {
-            // Auto-scrape full article content from URL
-            const response = await fetch('/api/scraper', {
+            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+            // Auto-scrape full article content from backend URL
+            const response = await fetch(`${API_BASE_URL}/scraper/scrape`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                credentials: 'include',
                 body: JSON.stringify({ url: article.url })
             })
 
@@ -306,18 +316,23 @@ Source: ${article.url}`)
         setGeneratedTitle('')
 
         try {
-            const response = await fetch('/api/ai/rewrite', {
+            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+            const response = await fetch(`${API_BASE_URL}/ai/generate`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                credentials: 'include',
                 body: JSON.stringify({
-                    content: sourceContent,
+                    originalContent: sourceContent,
                     title: selectedArticle?.title || 'Rewritten Article',
                     sourceUrl: selectedArticle?.url || scrapeUrl || '',
                     feedItemId: selectedArticle?.id,
-                    tone: aiTone,
-                    style: aiStyle,
-                    targetLength: aiLength,
-                    includeMetadata: true,
+                    options: {
+                        tone: aiTone,
+                        length: aiLength === 'shorter' ? 'short' : aiLength === 'longer' ? 'long' : 'medium',
+                    }
                 }),
             })
 
@@ -348,9 +363,14 @@ Source: ${article.url}`)
         setSourceContent('')
         setSelectedArticle(null)
         try {
-            const response = await fetch('/api/scraper', {
+            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+            const response = await fetch(`${API_BASE_URL}/scraper/scrape`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                },
+                credentials: 'include',
                 body: JSON.stringify({ url: scrapeUrl })
             })
             const result = await response.json()

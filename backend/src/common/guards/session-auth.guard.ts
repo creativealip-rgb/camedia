@@ -22,7 +22,11 @@ export class SessionAuthGuard implements CanActivate {
         // Debug Headers
         const authHeader = headers.get('authorization');
         const cookieHeader = headers.get('cookie');
-        console.log(`[SessionAuthGuard] Auth Header Present: ${!!authHeader}, Value: ${authHeader?.substring(0, 20)}...`);
+        const originHeader = headers.get('origin');
+        const hostHeader = headers.get('host');
+        console.log(`[SessionAuthGuard] Host: ${hostHeader}`);
+        console.log(`[SessionAuthGuard] Origin: ${originHeader}`);
+        console.log(`[SessionAuthGuard] Auth Header Present: ${!!authHeader}`);
         console.log(`[SessionAuthGuard] Cookie Header Present: ${!!cookieHeader}`);
 
         try {
