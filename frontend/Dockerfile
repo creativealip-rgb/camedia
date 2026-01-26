@@ -2,27 +2,27 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Copy package files first
 COPY package*.json ./
-COPY frontend/package*.json ./frontend/
 
-RUN npm install -w frontend
+RUN npm install
 
-COPY frontend ./frontend
+# Copy the rest of the application code
+COPY . .
 
-# Build the frontend
-WORKDIR /app/frontend
+# Build the application
 RUN npm run build
 
+# Second stage for runtime
 FROM node:20-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/frontend/package*.json ./frontend/
-COPY --from=builder /app/frontend/.next ./frontend/.next
-COPY --from=builder /app/frontend/public ./frontend/public
+# Copy necessary files from builder
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
-
-WORKDIR /app/frontend
 
 EXPOSE 3000
 
