@@ -9,10 +9,10 @@ COPY backend/package*.json ./backend/
 RUN npm install -w backend
 
 COPY backend ./backend
-COPY tsconfig.json ./
 
 # Build the backend
-RUN npm run build -w backend
+WORKDIR /app/backend
+RUN npm run build
 
 FROM node:20-alpine
 

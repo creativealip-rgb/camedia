@@ -10,7 +10,8 @@ RUN npm install -w frontend
 COPY frontend ./frontend
 
 # Build the frontend
-RUN npm run build -w frontend
+WORKDIR /app/frontend
+RUN npm run build
 
 FROM node:20-alpine
 
