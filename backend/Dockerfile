@@ -2,10 +2,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY package*.json ./
+# Debug: Check project structure
+RUN ls -la ..
 
-RUN npm install
+# Copy package files explicitly
+COPY package.json ./
+COPY package-lock.json* ./
+
+RUN ls -la && npm install
 
 # Copy the rest of the application code
 COPY . .
