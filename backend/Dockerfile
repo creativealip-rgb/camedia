@@ -2,27 +2,26 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy root lock files if needed, or just standard npm
+# Copy package files first for better caching
 COPY package*.json ./
-COPY backend/package*.json ./backend/
 
-RUN npm install -w backend
+RUN npm install
 
-COPY backend ./backend
+# Copy the rest of the application code
+COPY . .
 
-# Build the backend
-WORKDIR /app/backend
+# Build the application
 RUN npm run build
 
+# Second stage for runtime
 FROM node:20-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app/backend/package*.json ./backend/
-COPY --from=builder /app/backend/dist ./backend/dist
+# Copy necessary files from builder
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
-
-WORKDIR /app/backend
 
 EXPOSE 3001
 
