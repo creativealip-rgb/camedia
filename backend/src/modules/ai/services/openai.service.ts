@@ -15,20 +15,22 @@ export class OpenAiService {
             OPENROUTER_MODEL: this.configService.get('OPENROUTER_MODEL'),
         });
 
-        const apiKey = this.configService.get('OPENROUTER_API_KEY');
-        const baseURL = this.configService.get('OPENROUTER_BASE_URL') || 'https://openrouter.ai/api/v1';
+        const apiKey = (this.configService.get('OPENROUTER_API_KEY') || '').trim();
+        const baseURL = (this.configService.get('OPENROUTER_BASE_URL') || 'https://openrouter.ai/api/v1').trim();
 
         if (!apiKey) {
-            console.error('❌ OPENROUTER_API_KEY is undefined!');
+            console.error('❌ OPENROUTER_API_KEY is undefined or empty!');
             throw new Error('OPENROUTER_API_KEY is not set in environment variables');
         }
 
         console.log('✅ OpenAI client initializing with OpenRouter');
+        console.log(`🔑 API Key Prefix: ${apiKey.substring(0, 10)}...`);
+
         this.openai = new OpenAI({
             apiKey,
             baseURL,
         });
-        this.model = this.configService.get('OPENROUTER_MODEL') || 'gpt-4o';
+        this.model = this.configService.get('OPENROUTER_MODEL') || 'google/gemini-2.0-flash-exp:free';
         console.log(`✅ Model set to: ${this.model}`);
     }
 
