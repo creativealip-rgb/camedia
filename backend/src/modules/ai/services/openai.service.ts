@@ -16,7 +16,7 @@ export class OpenAiService {
         });
 
         const apiKey = this.configService.get('OPENROUTER_API_KEY');
-        const baseURL = this.configService.get('OPENROUTER_BASE_URL');
+        const baseURL = this.configService.get('OPENROUTER_BASE_URL') || 'https://openrouter.ai/api/v1';
 
         if (!apiKey) {
             console.error('❌ OPENROUTER_API_KEY is undefined!');
