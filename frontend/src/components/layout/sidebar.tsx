@@ -77,7 +77,7 @@ const icons = {
 const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: icons.dashboard },
     { href: '/content-lab', label: 'Content Lab', icon: icons.contentLab },
-    { href: '/feeds', label: 'RSS Feeds', icon: icons.rss },
+    { href: '/feeds', label: 'Web Sources', icon: icons.rss },
     { href: '/articles', label: 'Articles', icon: icons.articles },
     { href: '/integrations', label: 'Integrations', icon: icons.integrations },
     { href: '/billing', label: 'Billing', icon: icons.billing },

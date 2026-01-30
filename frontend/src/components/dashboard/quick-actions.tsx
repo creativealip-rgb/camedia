@@ -41,7 +41,7 @@ const quickActions = [
         gradient: 'from-indigo-500 to-purple-500',
     },
     {
-        label: 'Add RSS Feed',
+        label: 'Add Source',
         description: 'Set up auto-fetching',
         href: '/feeds',  // Fixed: changed from /feeds/new to /feeds
         icon: icons.rss,

@@ -565,7 +565,7 @@ Source: ${article.url}`)
                         Choose Source
                     </CardTitle>
                     <CardDescription>
-                        Select content to transform from RSS feeds
+                        Select content to transform from Web Sources
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -573,7 +573,7 @@ Source: ${article.url}`)
                         <TabsList className="grid w-full grid-cols-3 mb-6">
                             <TabsTrigger value="rss" className="flex items-center gap-2">
                                 <Rss className="h-4 w-4" />
-                                RSS Feed
+                                Web Source
                             </TabsTrigger>
                             <TabsTrigger value="url" className="flex items-center gap-2">
                                 <Globe className="h-4 w-4" />
@@ -581,30 +581,30 @@ Source: ${article.url}`)
                             </TabsTrigger>
                             <TabsTrigger value="idea" className="flex items-center gap-2">
                                 <Sparkles className="h-4 w-4" />
-                                Idea / Keywords
+                                Idea
                             </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="rss" className="space-y-4">
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                    <Label>Select RSS Feed Source</Label>
+                                    <Label>Select Source</Label>
                                     <Dialog open={isAddFeedOpen} onOpenChange={setIsAddFeedOpen}>
                                         <DialogTrigger asChild>
                                             <Button variant="ghost" size="sm" className="text-violet-600 h-6 px-2 hover:bg-violet-50">
-                                                <Plus className="h-4 w-4 mr-1" /> Add Feed
+                                                <Plus className="h-4 w-4 mr-1" /> Add Source
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent>
                                             <DialogHeader>
-                                                <DialogTitle>Add New RSS Feed</DialogTitle>
+                                                <DialogTitle>Add New Web Source</DialogTitle>
                                                 <DialogDescription>
-                                                    Enter the URL of the RSS feed you want to follow.
+                                                    Enter the URL of the feed you want to follow.
                                                 </DialogDescription>
                                             </DialogHeader>
                                             <div className="space-y-4 py-4">
                                                 <div className="space-y-2">
-                                                    <Label>Feed Name</Label>
+                                                    <Label>Source Name</Label>
                                                     <Input
                                                         placeholder="e.g. TechCrunch"
                                                         value={newFeedName}
@@ -612,7 +612,7 @@ Source: ${article.url}`)
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
-                                                    <Label>Feed URL</Label>
+                                                    <Label>Source URL</Label>
                                                     <Input
                                                         placeholder="https://example.com/feed"
                                                         value={newFeedUrl}
@@ -622,7 +622,7 @@ Source: ${article.url}`)
                                             </div>
                                             <DialogFooter>
                                                 <Button variant="outline" onClick={() => setIsAddFeedOpen(false)}>Cancel</Button>
-                                                <Button onClick={handleAddFeed} disabled={!newFeedName || !newFeedUrl}>Add Feed</Button>
+                                                <Button onClick={handleAddFeed} disabled={!newFeedName || !newFeedUrl}>Add Source</Button>
                                             </DialogFooter>
                                         </DialogContent>
                                     </Dialog>
@@ -800,7 +800,7 @@ Source: ${article.url}`)
 
                         {/* Category (Moved for internal links) */}
                         <div className="space-y-2">
-                            <Label className="text-sm font-medium">Category & Internal Links</Label>
+                            <Label className="text-sm font-medium">Category</Label>
                             <Select
                                 value={selectedCategory?.toString() || ''}
                                 onValueChange={(val) => setSelectedCategory(parseInt(val))}
@@ -980,7 +980,7 @@ Source: ${article.url}`)
                                             onClick={() => document.getElementById('featured-image-upload')?.click()}
                                         >
                                             <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                                            <span className="text-xs">Upload dari Komputer</span>
+                                            <span className="text-xs">Upload Image</span>
                                         </Button>
                                         <input
                                             id="featured-image-upload"
